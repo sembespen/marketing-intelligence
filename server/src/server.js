@@ -1,9 +1,11 @@
-import express from "express";
+import express, { response } from "express";
 import "dotenv/config";
 
 import { getMetaCampaignInsights } from "./integrations/meta.js";
-import { normalizeMetaCampaigns } from "./normalization/campaign.js";
+import { normalizeMetaCampaigns } from "./normalization/normalizeMeta.js";
 import { validateDateRange } from "./validation/dateRange.js";
+import { getGoogleCampaignInsights } from "./integrations/googleAds.js";
+import { normalizeGoogleCampaigns } from "./normalization/normalizeGoogleAds.js";
 
 const app = express();
 const port = 3000;
@@ -38,6 +40,36 @@ app.get("/api/meta/campaigns", async (request, response) => {
     );
 
     const campaigns = normalizeMetaCampaigns(payload.data);
+
+    response.json({
+        data: campaigns
+    });
+});
+
+app.get("/api/google/raw", async (request, response) => {
+    const { since, until } = request.query;
+
+    const dateRange = validateDateRange(since, until);
+
+    const payload = await getGoogleCampaignInsights(
+        dateRange.since,
+        dateRange.until
+    );
+
+    response.json(payload);
+});
+
+app.get("/api/google/campaigns", async (request, response) => {
+    const { since, until } = request.query;
+
+    const dateRange = validateDateRange(since, until);
+
+    const payload = await getGoogleCampaignInsights(
+        dateRange.since,
+        dateRange.until
+    );
+
+    const campaigns = normalizeGoogleCampaigns(payload);
 
     response.json({
         data: campaigns

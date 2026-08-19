@@ -1,3 +1,5 @@
+import { requireEnv } from "../config/env.js";
+
 export async function getMetaCampaignInsights(since, until) {
     const accessToken = requireEnv("META_ACCESS_TOKEN");
     const adAccountId = requireEnv("META_AD_ACCOUNT_ID");
@@ -40,14 +42,4 @@ export async function getMetaCampaignInsights(since, until) {
     return {
         data: allRows
     };
-}
-
-function requireEnv(name) {
-    const value = process.env[name];
-
-    if (!value) {
-        throw new Error(`Missing required environment variable: ${name}`);
-    }
-
-    return value;
 }
