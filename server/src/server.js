@@ -6,6 +6,9 @@ import { normalizeMetaCampaigns } from "./normalization/normalizeMeta.js";
 import { validateDateRange } from "./validation/dateRange.js";
 import { getGoogleCampaignInsights } from "./integrations/googleAds.js";
 import { normalizeGoogleCampaigns } from "./normalization/normalizeGoogleAds.js";
+import { getShopifyOrders } from "./integrations/shopify.js";
+import { normalizeShopifyOrders } from "./normalization/normalizeShopifyOrders.js";
+import { calculateCommerceMetrics } from "./domain/commerceMetrics.js";
 
 const app = express();
 const port = 3000;
@@ -74,6 +77,32 @@ app.get("/api/google/campaigns", async (request, response) => {
     response.json({
         data: campaigns
     });
+});
+
+app.get("/api/shopify/raw", async (request, response) => {
+    const payload = await getShopifyOrders();
+
+    response.json(payload);
+});
+
+app.get("/api/shopify/orders", async (request, response) => {
+    const payload = await getShopifyOrders();
+
+    const orders = normalizeShopifyOrders(payload);
+
+    response.json({
+        data: orders
+    });
+});
+
+app.get("/api/shopify/summary", async (request, response) => {
+    const payload = await getShopifyOrders();
+
+    const orders = normalizeShopifyOrders(payload);
+
+    const metrics = calculateCommerceMetrics(orders);
+
+    response.json(metrics);
 });
 
 app.listen(3000, () => {
