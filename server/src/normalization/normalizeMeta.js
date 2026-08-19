@@ -1,3 +1,17 @@
+import { calculateCampaignMetrics } from "../domain/campaignMetric.js";
+
+function getActionValue(actions, actionType) {
+    if (!Array.isArray(actions)) {
+        return 0;
+    }
+
+    const action = actions.find(
+        (item) => item.action_type === actionType
+    );
+
+    return Number(action?.value ?? 0);
+}
+
 export function normalizeMetaCampaign(rawCampaign) {
     const spend = Number(rawCampaign.spend ?? 0);
     const impressions = Number(rawCampaign.impressions ?? 0);
@@ -13,50 +27,38 @@ export function normalizeMetaCampaign(rawCampaign) {
         "lead"
     );
 
-    const ctr = impressions === 0
-        ? 0
-        : clicks / impressions;
-    
-    const cpc = clicks === 0
-        ? 0
-        : spend / clicks;
+    const platformAttributedRevenue = null;
 
-    const costPerLead = leads === 0
-        ? 0
-        : spend / leads;
+    const derivedMetrics = calculateCampaignMetrics({
+        spend,
+        impressions,
+        clicks,
+        conversions: leads,
+        attributedRevenue: platformAttributedRevenue
+    });
 
     return {
         platform: "meta",
+
         campaignId: rawCampaign.campaign_id,
         campaignName: rawCampaign.campaign_name,
+
+        date: rawCampaign.date_start,
 
         spend,
         impressions,
         clicks,
         linkClicks,
-        leads,
         
-        ctr,
-        cpc,
-        costPerLead,
+        primaryConversionType: "lead",
+        primaryConversions: leads,
 
-        dateStart: rawCampaign.date_start,
-        dateStop: rawCampaign.date_stop
+        platformAttributedRevenue,
+        
+        ...derivedMetrics
     };
 }
 
 export function normalizeMetaCampaigns(rawCampaigns) {
     return rawCampaigns.map(normalizeMetaCampaign);
-}
-
-function getActionValue(actions, actionType) {
-    if (!Array.isArray(actions)) {
-        return 0;
-    }
-
-    const action = actions.find(
-        (item) => item.action_type === actionType
-    );
-
-    return Number(action?.value ?? 0);
 }
