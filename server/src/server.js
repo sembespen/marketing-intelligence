@@ -21,7 +21,7 @@ app.get("/api/meta/raw", async (request, response) => {
 
     const payload = await getMetaCampaignInsights(
         dateRange.since,
-        datgeRange.until
+        dateRange.until
     );
 
     response.json(payload);

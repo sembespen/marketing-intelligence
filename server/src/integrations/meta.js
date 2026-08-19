@@ -10,34 +10,36 @@ export async function getMetaCampaignInsights(since, until) {
         "fields",
         "campaign_id,campaign_name,spend,impressions,clicks,actions,action_values"
     );
-
     url.searchParams.set("level", "campaign");
-    
-    const timeRange = {
-        since,
-        until
-    };
-
-    url.searchParams.set(
-        "time_range",
-        JSON.stringify(timeRange)
-    );
+    url.searchParams.set("time_range", JSON.stringify({ since, until }));
     url.searchParams.set("time_increment", "1");
-
     url.searchParams.set("access_token", accessToken);
 
-    const response = await fetch(url);
+    const allRows = [];
 
-    if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(
-            `Meta API error ${response.status}: ${errorBody}`
-        );
+    let nextUrl = url.toString();
+
+    while (nextUrl) {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            const errorBody = await response.text();
+            
+            throw new Error(
+                `Meta API error ${response.status}: ${errorBody}`
+            );
+        }
+
+        const payload = await response.json();
+
+        allRows.push(...payload.data);
+
+        nextUrl = payload.paging?.next ?? null;
     }
 
-    const payload = await response.json();
-
-    return payload;
+    return {
+        data: allRows
+    };
 }
 
 function requireEnv(name) {
